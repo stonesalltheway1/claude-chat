@@ -1,0 +1,25 @@
+{
+  "name": "html-llm",
+  "version": "1.0.0",
+  "main": "service-worker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stonesalltheway1/claude-chat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stonesalltheway1/claude-chat/issues"
+  },
+  "homepage": "https://github.com/stonesalltheway1/claude-chat#readme",
+  "description": "",
+  "devDependencies": {
+    "eslint": "^9.23.0",
+    "http-server": "^14.1.1",
+    "prettier": "^3.5.3"
+  }
+}

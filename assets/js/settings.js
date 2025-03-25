@@ -1,288 +1,1065 @@
 /**
- * Enhanced Settings Management System
+ * Settings Management System
  * 
- * Features:
- * - Robust settings validation and sanitization
- * - Secure API key handling with encryption
- * - Multiple storage backends with fallbacks
- * - Settings versioning and migration support
- * - Optimized UI interactions with minimal DOM operations
- * - Settings presets, import/export capabilities
- * - Event-driven architecture
+ * A comprehensive system for managing application settings with:
+ * - Type-safe settings schema with validation
+ * - Multi-tier storage with encryption for sensitive data
+ * - Automatic migration between versions
+ * - Optimized DOM operations with element caching
+ * - Real-time setting preview with reactive updates
+ * - Import/export capabilities with validation
+ * - Event-driven architecture for cross-component communication
+ * 
+ * @module settings
+ * @version 2.0.0
  */
 
-// Settings configuration with schema validation and metadata
-const SETTINGS_CONFIG = {
-    version: '1.2.0',
-    storageKey: 'aiAssistantSettings',
-    encryptionSalt: 'claude-assistant-', // Used for simple obfuscation
-    
-    // Schema definition with validators and metadata
-    schema: {
-      apiKey: {
-        type: 'string',
-        default: '',
-        sensitive: true,
-        validate: value => typeof value === 'string',
-        sanitize: value => value.trim()
-      },
-      model: {
-        type: 'string',
-        default: 'claude-3-7-sonnet-20250219',
-        options: [
-          { value: 'claude-3-7-sonnet-20250219', label: 'Claude 3.7 Sonnet' },
-          { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
-          { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet' },
-          { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku' }
-        ],
-        validate: value => typeof value === 'string'
-      },
-      temperature: {
-        type: 'number',
-        default: 0.7,
-        min: 0,
-        max: 1,
-        step: 0.1,
-        validate: value => typeof value === 'number' && value >= 0 && value <= 1,
-        sanitize: value => Math.min(1, Math.max(0, parseFloat(value)))
-      },
-      thinkingBudget: {
-        type: 'number',
-        default: 10240,
-        min: 1024,
-        max: 120000,
-        step: 1024,
-        validate: value => typeof value === 'number' && value >= 1024,
-        sanitize: value => Math.max(1024, parseInt(value))
-      },
-      maxTokens: {
-        type: 'number',
-        default: 4096,
-        min: 1024,
-        max: 20000,
-        step: 1024,
-        validate: value => typeof value === 'number' && value >= 1024,
-        sanitize: value => Math.max(1024, parseInt(value))
-      },
-      messagesToKeep: {
-        type: 'number',
-        default: 20,
-        min: 1,
-        max: 100,
-        step: 1,
-        validate: value => typeof value === 'number' && value >= 1 && value <= 100,
-        sanitize: value => Math.min(100, Math.max(1, parseInt(value)))
-      },
-      autoScroll: {
-        type: 'boolean',
-        default: true,
-        validate: value => typeof value === 'boolean'
-      },
-      soundEffects: {
-        type: 'boolean',
-        default: true,
-        validate: value => typeof value === 'boolean'
-      },
-      theme: {
-        type: 'string',
-        default: 'system',
-        options: [
-          { value: 'light', label: 'Light' },
-          { value: 'dark', label: 'Dark' },
-          { value: 'system', label: 'System Default' }
-        ],
-        validate: value => ['light', 'dark', 'system'].includes(value)
-      }
+// Constants for storage keys
+const STORAGE_KEYS = {
+    SETTINGS: 'claude_assistant_settings',
+    THEME: 'claude_assistant_theme',
+    VERSION: 'claude_settings_version'
+  };
+  
+  /**
+   * Available Claude API models
+   * @type {Object[]}
+   */
+  const AVAILABLE_MODELS = [
+    { value: 'claude-3-7-sonnet-20250219', label: 'Claude 3.7 Sonnet' },
+    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
+    { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet' },
+    { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku' }
+  ];
+  
+  /**
+   * Settings schema with validation, defaults, and metadata
+   * @type {Object}
+   */
+  const SETTINGS_SCHEMA = {
+    apiKey: {
+      type: 'string',
+      default: '',
+      sensitive: true,
+      validate: value => typeof value === 'string',
+      sanitize: value => value?.trim() || '',
+      category: 'connection',
+      label: 'API Key',
+      description: 'Your Anthropic API key for accessing Claude'
     },
-    
-    // Preset configurations
-    presets: {
-      default: {
-        temperature: 0.7,
-        thinkingBudget: 10240,
-        maxTokens: 4096
-      },
-      creative: {
-        temperature: 1.0,
-        thinkingBudget: 16384,
-        maxTokens: 8192
-      },
-      precise: {
-        temperature: 0.3,
-        thinkingBudget: 20480,
-        maxTokens: 4096
-      },
-      efficient: {
-        temperature: 0.5,
-        thinkingBudget: 5120,
-        maxTokens: 2048
-      }
+    model: {
+      type: 'string',
+      default: 'claude-3-7-sonnet-20250219',
+      options: AVAILABLE_MODELS,
+      validate: value => AVAILABLE_MODELS.some(model => model.value === value),
+      category: 'ai',
+      label: 'AI Model',
+      description: 'The Claude model to use for generating responses'
+    },
+    temperature: {
+      type: 'number',
+      default: 0.7,
+      min: 0,
+      max: 1,
+      step: 0.1,
+      validate: value => typeof value === 'number' && value >= 0 && value <= 1,
+      sanitize: value => Math.min(1, Math.max(0, parseFloat(value) || 0)),
+      category: 'ai',
+      label: 'Temperature',
+      description: 'Controls randomness: lower values are more focused, higher values more creative'
+    },
+    thinkingBudget: {
+      type: 'number',
+      default: 10240,
+      min: 1024,
+      max: 120000,
+      step: 1024,
+      validate: value => typeof value === 'number' && value >= 1024,
+      sanitize: value => Math.max(1024, parseInt(value) || 1024),
+      category: 'ai',
+      label: 'Thinking Budget',
+      description: 'Maximum tokens allocated for Claude\'s thinking process'
+    },
+    maxTokens: {
+      type: 'number',
+      default: 4096,
+      min: 1024,
+      max: 20000,
+      step: 1024,
+      validate: value => typeof value === 'number' && value >= 1024,
+      sanitize: value => Math.max(1024, parseInt(value) || 1024),
+      category: 'ai',
+      label: 'Max Tokens',
+      description: 'Maximum number of tokens in Claude\'s response'
+    },
+    messagesToKeep: {
+      type: 'number',
+      default: 20,
+      min: 1,
+      max: 100,
+      step: 1,
+      validate: value => typeof value === 'number' && value >= 1 && value <= 100,
+      sanitize: value => Math.min(100, Math.max(1, parseInt(value) || 20)),
+      category: 'chat',
+      label: 'Messages to Keep',
+      description: 'Number of messages to retain in chat history'
+    },
+    autoScroll: {
+      type: 'boolean',
+      default: true,
+      validate: value => typeof value === 'boolean',
+      category: 'interface',
+      label: 'Auto-scroll to Bottom',
+      description: 'Automatically scroll to the latest message'
+    },
+    soundEffects: {
+      type: 'boolean',
+      default: true,
+      validate: value => typeof value === 'boolean',
+      category: 'interface',
+      label: 'Sound Effects',
+      description: 'Play sound effects for notifications and events'
+    },
+    theme: {
+      type: 'string',
+      default: 'system',
+      options: [
+        { value: 'light', label: 'Light' },
+        { value: 'dark', label: 'Dark' },
+        { value: 'system', label: 'System Default' }
+      ],
+      validate: value => ['light', 'dark', 'system'].includes(value),
+      category: 'interface',
+      label: 'Theme',
+      description: 'Application color theme'
     }
   };
   
   /**
-   * SettingsManager class handles all settings operations
+   * Settings presets for quick configuration
+   * @type {Object}
    */
-  class SettingsManager {
-    constructor(config) {
-      this.config = config;
-      this.settings = null;
-      this.events = new EventEmitter();
-      this.uiElements = {}; // Cache for DOM elements
-      this.initialized = false;
-      this.saveQueue = null;
+  const SETTINGS_PRESETS = {
+    default: {
+      temperature: 0.7,
+      thinkingBudget: 10240,
+      maxTokens: 4096
+    },
+    creative: {
+      temperature: 1.0,
+      thinkingBudget: 16384,
+      maxTokens: 8192
+    },
+    precise: {
+      temperature: 0.3,
+      thinkingBudget: 20480,
+      maxTokens: 4096
+    },
+    efficient: {
+      temperature: 0.5,
+      thinkingBudget: 5120,
+      maxTokens: 2048
+    }
+  };
+  
+  /**
+   * Settings categories for UI organization
+   * @type {Object[]}
+   */
+  const SETTINGS_CATEGORIES = [
+    {
+      id: 'connection',
+      label: 'Connection',
+      icon: 'key',
+      description: 'API connection settings'
+    },
+    {
+      id: 'ai',
+      label: 'AI Configuration',
+      icon: 'cpu',
+      description: 'Configure Claude\'s behavior and capabilities'
+    },
+    {
+      id: 'interface',
+      label: 'Interface',
+      icon: 'monitor',
+      description: 'User interface preferences'
+    },
+    {
+      id: 'chat',
+      label: 'Chat',
+      icon: 'message-circle',
+      description: 'Chat behavior and history settings'
+    }
+  ];
+  
+  /**
+   * Security utility for handling sensitive data
+   */
+  class SecurityUtil {
+    /**
+     * Simple obfuscation for sensitive values
+     * @param {string} value - Value to obfuscate
+     * @returns {string} Obfuscated value
+     */
+    static obfuscate(value) {
+      if (!value) return '';
+      try {
+        return btoa(`${value}:${Date.now()}`);
+      } catch (e) {
+        console.error('Failed to obfuscate value', e);
+        return '';
+      }
     }
   
     /**
-     * Initialize the settings system
-     * @returns {Promise}
+     * Deobfuscate sensitive value
+     * @param {string} obfuscated - Obfuscated value
+     * @returns {string} Original value
+     */
+    static deobfuscate(obfuscated) {
+      if (!obfuscated) return '';
+      try {
+        const decoded = atob(obfuscated);
+        return decoded.split(':')[0];
+      } catch (e) {
+        console.error('Failed to deobfuscate value', e);
+        return '';
+      }
+    }
+  
+    /**
+     * Create a secure hash of a value (for comparison)
+     * @param {string} value - Value to hash
+     * @returns {string} Hashed value
+     */
+    static hash(value) {
+      if (!value) return '';
+      
+      // Simple hash function for browser environments
+      let hash = 0;
+      for (let i = 0; i < value.length; i++) {
+        const char = value.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      return hash.toString(36);
+    }
+  }
+  
+  /**
+   * Storage adapter with multi-tier fallbacks
+   */
+  class StorageAdapter {
+    /**
+     * Save data to storage
+     * @param {string} key - Storage key
+     * @param {*} value - Value to store
+     * @returns {boolean} Success status
+     */
+    static async save(key, value) {
+      try {
+        // Serialize for storage
+        const serialized = JSON.stringify(value);
+        
+        // Try localStorage first
+        try {
+          localStorage.setItem(key, serialized);
+          return true;
+        } catch (e) {
+          // Fall back to sessionStorage
+          try {
+            sessionStorage.setItem(key, serialized);
+            return true;
+          } catch (innerError) {
+            console.error('Failed to save to storage:', innerError);
+            return false;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to serialize settings:', e);
+        return false;
+      }
+    }
+  
+    /**
+     * Load data from storage
+     * @param {string} key - Storage key
+     * @param {*} defaultValue - Default value if not found
+     * @returns {*} Retrieved value or default
+     */
+    static async load(key, defaultValue = null) {
+      let data = null;
+  
+      // Try localStorage first
+      try {
+        data = localStorage.getItem(key);
+      } catch (e) {
+        // Ignore localStorage errors
+      }
+  
+      // Try sessionStorage if not in localStorage
+      if (data === null) {
+        try {
+          data = sessionStorage.getItem(key);
+        } catch (e) {
+          // Ignore sessionStorage errors
+        }
+      }
+  
+      // Parse data if found
+      if (data) {
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          console.error('Failed to parse stored settings:', e);
+        }
+      }
+  
+      // Return default if all else fails
+      return defaultValue;
+    }
+  
+    /**
+     * Remove data from all storage backends
+     * @param {string} key - Storage key to clear
+     */
+    static clear(key) {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        // Ignore localStorage errors
+      }
+  
+      try {
+        sessionStorage.removeItem(key);
+      } catch (e) {
+        // Ignore sessionStorage errors
+      }
+    }
+  
+    /**
+     * Test if storage is available
+     * @returns {boolean} Whether storage is available
+     */
+    static isAvailable() {
+      try {
+        const testKey = '__storage_test__';
+        localStorage.setItem(testKey, testKey);
+        localStorage.removeItem(testKey);
+        return true;
+      } catch (e) {
+        try {
+          // Try sessionStorage as fallback
+          const testKey = '__storage_test__';
+          sessionStorage.setItem(testKey, testKey);
+          sessionStorage.removeItem(testKey);
+          return true;
+        } catch (innerError) {
+          return false;
+        }
+      }
+    }
+  }
+  
+  /**
+   * Event emitter for settings events
+   */
+  class EventEmitter {
+    constructor() {
+      this.events = {};
+    }
+  
+    /**
+     * Subscribe to an event
+     * @param {string} event - Event name
+     * @param {Function} listener - Event callback
+     * @returns {Function} Unsubscribe function
+     */
+    on(event, listener) {
+      if (!this.events[event]) {
+        this.events[event] = [];
+      }
+      this.events[event].push(listener);
+      
+      // Return unsubscribe function
+      return () => this.off(event, listener);
+    }
+  
+    /**
+     * Unsubscribe from an event
+     * @param {string} event - Event name
+     * @param {Function} listener - Event callback to remove
+     */
+    off(event, listener) {
+      if (!this.events[event]) return;
+      this.events[event] = this.events[event].filter(l => l !== listener);
+    }
+  
+    /**
+     * Emit an event
+     * @param {string} event - Event name
+     * @param {*} data - Event data
+     */
+    emit(event, data) {
+      if (!this.events[event]) return;
+      this.events[event].forEach(listener => {
+        try {
+          listener(data);
+        } catch (error) {
+          console.error(`Error in event listener for ${event}:`, error);
+        }
+      });
+    }
+  
+    /**
+     * Subscribe to an event once
+     * @param {string} event - Event name
+     * @param {Function} listener - Event callback
+     */
+    once(event, listener) {
+      const remove = this.on(event, data => {
+        remove();
+        listener(data);
+      });
+    }
+    
+    /**
+     * Check if event has listeners
+     * @param {string} event - Event name
+     * @returns {boolean} Has listeners
+     */
+    hasListeners(event) {
+      return !!(this.events[event] && this.events[event].length > 0);
+    }
+  }
+  
+  /**
+   * DOM utility for efficient element operations
+   */
+  class DOMUtil {
+    /**
+     * Element cache for performance
+     */
+    static elementCache = new Map();
+  
+    /**
+     * Get element by ID from cache or DOM
+     * @param {string} id - Element ID
+     * @returns {HTMLElement|null} Found element or null
+     */
+    static getElement(id) {
+      if (this.elementCache.has(id)) {
+        return this.elementCache.get(id);
+      }
+      
+      const element = document.getElementById(id);
+      if (element) {
+        this.elementCache.set(id, element);
+      }
+      return element;
+    }
+  
+    /**
+     * Create a debounced function
+     * @param {Function} func - Function to debounce
+     * @param {number} wait - Debounce wait time in ms
+     * @returns {Function} Debounced function
+     */
+    static debounce(func, wait = 300) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+    
+    /**
+     * Add multiple classes to an element
+     * @param {HTMLElement} element - Target element
+     * @param {...string} classes - Classes to add
+     */
+    static addClasses(element, ...classes) {
+      if (!element) return;
+      element.classList.add(...classes.filter(Boolean));
+    }
+    
+    /**
+     * Remove multiple classes from an element
+     * @param {HTMLElement} element - Target element
+     * @param {...string} classes - Classes to remove
+     */
+    static removeClasses(element, ...classes) {
+      if (!element) return;
+      element.classList.remove(...classes.filter(Boolean));
+    }
+    
+    /**
+     * Set attributes on an element
+     * @param {HTMLElement} element - Target element
+     * @param {Object} attributes - Attributes to set
+     */
+    static setAttributes(element, attributes) {
+      if (!element) return;
+      Object.entries(attributes).forEach(([attr, value]) => {
+        if (value === null || value === undefined) {
+          element.removeAttribute(attr);
+        } else {
+          element.setAttribute(attr, value);
+        }
+      });
+    }
+  }
+  
+  /**
+   * Toast notification manager
+   */
+  const ToastManager = {
+    /**
+     * Show a toast notification
+     * @param {Object} options - Toast options
+     */
+    show(options) {
+      // Use global showToast if available
+      if (typeof window.showToast === 'function') {
+        window.showToast(options);
+      } else {
+        // Fallback console output
+        console.log(`[${options.type}] ${options.title}: ${options.message}`);
+      }
+    },
+    
+    /**
+     * Show a success toast
+     * @param {string} title - Toast title
+     * @param {string} message - Toast message
+     * @param {number} duration - Display duration in ms
+     */
+    success(title, message, duration = 3000) {
+      this.show({
+        title,
+        message,
+        type: 'success',
+        duration
+      });
+    },
+    
+    /**
+     * Show an error toast
+     * @param {string} title - Toast title
+     * @param {string} message - Toast message
+     * @param {number} duration - Display duration in ms
+     */
+    error(title, message, duration = 5000) {
+      this.show({
+        title,
+        message,
+        type: 'error',
+        duration
+      });
+    },
+    
+    /**
+     * Show a warning toast
+     * @param {string} title - Toast title
+     * @param {string} message - Toast message
+     * @param {number} duration - Display duration in ms
+     */
+    warning(title, message, duration = 4000) {
+      this.show({
+        title,
+        message,
+        type: 'warning',
+        duration
+      });
+    },
+    
+    /**
+     * Show an info toast
+     * @param {string} title - Toast title
+     * @param {string} message - Toast message
+     * @param {number} duration - Display duration in ms
+     */
+    info(title, message, duration = 3000) {
+      this.show({
+        title,
+        message,
+        type: 'info',
+        duration
+      });
+    }
+  };
+  
+  /**
+   * Settings Manager - Core class for managing application settings
+   */
+  class SettingsManager {
+    /**
+     * Create a new SettingsManager instance
+     */
+    constructor() {
+      // Configuration
+      this.version = '2.0.0';
+      this.schema = SETTINGS_SCHEMA;
+      this.presets = SETTINGS_PRESETS;
+      this.categories = SETTINGS_CATEGORIES;
+      
+      // State
+      this.settings = null;
+      this.events = new EventEmitter();
+      this.elements = {};
+      this.initialized = false;
+      this.pendingChanges = {};
+      this.hasUnsavedChanges = false;
+      
+      // Bind methods that need this context
+      this._boundHandleThemePrefChange = this._handleThemePreferenceChange.bind(this);
+      
+      // Debounced methods
+      this.debouncedSave = DOMUtil.debounce(this._saveSettings.bind(this), 300);
+      this.debouncedUpdateUI = DOMUtil.debounce(this._updateUIFromSettings.bind(this), 50);
+      this.previewSetting = DOMUtil.debounce(this._previewSetting.bind(this), 50);
+    }
+    
+    /**
+     * Initialize settings manager
+     * @returns {Promise<SettingsManager>} Initialized instance
      */
     async init() {
-      if (this.initialized) return;
+      if (this.initialized) return this;
       
       try {
-        // Load settings with fallback chain
-        await this.loadSettings();
+        console.time('Settings Initialization');
         
-        // Validate and apply migrations if needed
-        this.validateAndMigrateSettings();
+        // Check storage availability
+        if (!StorageAdapter.isAvailable()) {
+          console.warn('Local storage is not available. Settings will not persist.');
+        }
         
-        // Cache DOM elements for better performance
-        this.cacheUIElements();
+        // Load settings with fallbacks
+        await this._loadSettings();
         
-        // Initialize UI
-        this.initializeUI();
+        // Validate and migrate settings
+        this._validateAndMigrate();
         
+        // Initialize DOM elements
+        this._initializeDOM();
+        
+        // Initialize theme
+        this._initializeTheme();
+        
+        // Set up media query listeners
+        this._setupMediaListeners();
+        
+        // Mark as initialized
         this.initialized = true;
-        this.events.emit('initialized', this.settings);
+        
+        // Emit initialized event
+        this.events.emit('initialized', { 
+          settings: this.getPublicSettings(),
+          categories: this.categories
+        });
         
         // Check if API key is set, if not, prompt to configure
         if (!this.settings.apiKey) {
           this.events.emit('missing-api-key');
         }
+        
+        console.timeEnd('Settings Initialization');
+        return this;
       } catch (error) {
         console.error('Failed to initialize settings:', error);
-        this.handleInitError(error);
+        
+        // Reset to defaults as fallback
+        this.settings = this._getDefaultSettings();
+        this._saveSettings(this.settings);
+        
+        // Emit error event
+        this.events.emit('error', { 
+          message: 'Failed to initialize settings',
+          error
+        });
+        
+        throw error;
       }
     }
     
     /**
-     * Cache UI elements for better performance
+     * Load settings from storage
+     * @private
      */
-    cacheUIElements() {
+    async _loadSettings() {
+      // Load from storage
+      const storedSettings = await StorageAdapter.load(STORAGE_KEYS.SETTINGS);
+      
+      if (storedSettings) {
+        this.settings = storedSettings;
+        
+        // Handle encrypted sensitive data
+        for (const [key, schema] of Object.entries(this.schema)) {
+          if (schema.sensitive) {
+            const encryptedKey = `${key}_encrypted`;
+            
+            if (this.settings[encryptedKey]) {
+              try {
+                this.settings[key] = SecurityUtil.deobfuscate(this.settings[encryptedKey]);
+                delete this.settings[encryptedKey];
+              } catch (e) {
+                console.warn(`Could not decrypt ${key}, resetting to default`);
+                this.settings[key] = schema.default;
+              }
+            }
+          }
+        }
+      } else {
+        // Use defaults if nothing stored
+        this.settings = this._getDefaultSettings();
+        
+        // Save defaults
+        await this._saveSettings(this.settings);
+      }
+    }
+    
+    /**
+     * Get default settings
+     * @returns {Object} Default settings
+     * @private
+     */
+    _getDefaultSettings() {
+      const defaults = {};
+      
+      // Extract defaults from schema
+      for (const [key, schema] of Object.entries(this.schema)) {
+        defaults[key] = schema.default;
+      }
+      
+      return defaults;
+    }
+    
+    /**
+     * Save settings to storage
+     * @param {Object} settings - Settings to save
+     * @returns {Promise<boolean>} Success status
+     * @private
+     */
+    async _saveSettings(settings = this.settings) {
+      if (!settings) return false;
+      
+      try {
+        // Create a copy for storage
+        const storageSettings = { ...settings };
+        
+        // Handle sensitive fields
+        for (const [key, schema] of Object.entries(this.schema)) {
+          if (schema.sensitive && storageSettings[key]) {
+            // Encrypt sensitive data
+            storageSettings[`${key}_encrypted`] = SecurityUtil.obfuscate(storageSettings[key]);
+            // Remove the actual value from storage
+            storageSettings[key] = Boolean(storageSettings[key]); // Just store that we have a value
+          }
+        }
+        
+        // Save to storage
+        const success = await StorageAdapter.save(STORAGE_KEYS.SETTINGS, storageSettings);
+        
+        if (success) {
+          this.hasUnsavedChanges = false;
+          this.events.emit('settings-saved', { settings: this.getPublicSettings() });
+        }
+        
+        return success;
+      } catch (error) {
+        console.error('Failed to save settings:', error);
+        return false;
+      }
+    }
+    
+    /**
+     * Validate settings and migrate if needed
+     * @private
+     */
+    _validateAndMigrate() {
+      const newSettings = { ...this.settings };
+      let needsUpdate = false;
+      
+      // Check version for migrations
+      const storedVersion = localStorage.getItem(STORAGE_KEYS.VERSION);
+      
+      // Process version migration if needed
+      if (storedVersion && storedVersion !== this.version) {
+        this._migrateFromVersion(storedVersion, newSettings);
+        needsUpdate = true;
+      }
+      
+      // Store current version
+      localStorage.setItem(STORAGE_KEYS.VERSION, this.version);
+      
+      // Validate each setting against schema
+      for (const [key, schema] of Object.entries(this.schema)) {
+        // Check if key exists
+        if (!(key in newSettings) || newSettings[key] === undefined || newSettings[key] === null) {
+          newSettings[key] = schema.default;
+          needsUpdate = true;
+          continue;
+        }
+        
+        // Validate value
+        const value = newSettings[key];
+        
+        if (schema.validate && !schema.validate(value)) {
+          // Try to sanitize
+          if (schema.sanitize) {
+            try {
+              newSettings[key] = schema.sanitize(value);
+              needsUpdate = true;
+            } catch (e) {
+              // Sanitization failed, use default
+              console.warn(`Could not sanitize ${key}, resetting to default`, e);
+              newSettings[key] = schema.default;
+              needsUpdate = true;
+            }
+          } else {
+            // No sanitize function, use default
+            newSettings[key] = schema.default;
+            needsUpdate = true;
+          }
+        }
+      }
+      
+      // Update settings if needed
+      if (needsUpdate) {
+        this.settings = newSettings;
+        this._saveSettings(newSettings);
+      }
+    }
+    
+    /**
+     * Migrate settings from a previous version
+     * @param {string} fromVersion - Previous version
+     * @param {Object} settings - Settings object to migrate
+     * @private
+     */
+    _migrateFromVersion(fromVersion, settings) {
+      console.log(`Migrating settings from version ${fromVersion} to ${this.version}`);
+      
+      // v1.0.0 to v1.2.0
+      if (fromVersion === '1.0.0' || fromVersion === '1.1.0') {
+        // Add new v1.2.0 settings with defaults
+        if (!('thinkingBudget' in settings)) {
+          settings.thinkingBudget = 10240;
+        }
+      }
+      
+      // v1.2.0 to v2.0.0
+      if (fromVersion === '1.2.0') {
+        // No migration needed currently
+      }
+      
+      // Store new version
+      localStorage.setItem(STORAGE_KEYS.VERSION, this.version);
+    }
+    
+    /**
+     * Initialize DOM elements
+     * @private
+     */
+    _initializeDOM() {
       // Primary controls
       ['settingsButton', 'sidebarSettingsBtn', 'closeSettings', 'saveSettings', 
        'settingsPanel', 'overlay', 'presetSelector'].forEach(id => {
-        this.uiElements[id] = document.getElementById(id);
+        this.elements[id] = DOMUtil.getElement(id);
       });
       
       // Settings inputs
-      Object.keys(this.config.schema).forEach(key => {
-        this.uiElements[key] = document.getElementById(key);
+      for (const [key, schema] of Object.entries(this.schema)) {
+        this.elements[key] = DOMUtil.getElement(key);
         
         // Special cases for some settings
         if (key === 'apiKey') {
-          this.uiElements.togglePassword = document.getElementById('togglePassword');
-          this.uiElements.showPasswordIcon = this.uiElements.togglePassword?.querySelector('.show-password');
-          this.uiElements.hidePasswordIcon = this.uiElements.togglePassword?.querySelector('.hide-password');
+          this.elements.togglePassword = DOMUtil.getElement('togglePassword');
+          if (this.elements.togglePassword) {
+            this.elements.showPasswordIcon = this.elements.togglePassword.querySelector('.show-password');
+            this.elements.hidePasswordIcon = this.elements.togglePassword.querySelector('.hide-password');
+          }
         }
         
         if (key === 'temperature') {
-          this.uiElements.temperatureValue = document.getElementById('temperatureValue');
+          this.elements.temperatureValue = DOMUtil.getElement('temperatureValue');
         }
-      });
+      }
       
-      this.uiElements.usageInfo = document.getElementById('usageInfo');
-      this.uiElements.exportSettingsBtn = document.getElementById('exportSettingsBtn');
-      this.uiElements.importSettingsBtn = document.getElementById('importSettingsBtn');
+      // Additional elements
+      this.elements.usageInfo = DOMUtil.getElement('usageInfo');
+      this.elements.exportSettingsBtn = DOMUtil.getElement('exportSettingsBtn');
+      this.elements.importSettingsBtn = DOMUtil.getElement('importSettingsBtn');
+      this.elements.resetSettingsBtn = DOMUtil.getElement('resetSettingsBtn');
+      
+      // Initialize UI
+      this._initializeUI();
     }
     
     /**
-     * Initialize UI event listeners and state
+     * Initialize UI interactions
+     * @private
      */
-    initializeUI() {
-      // Only set up UI if elements exist
-      if (!this.uiElements.settingsPanel) return;
+    _initializeUI() {
+      // Skip if settings panel not found
+      if (!this.elements.settingsPanel) return;
       
-      // Apply initial settings to UI
-      this.populateUI();
+      // Apply current settings to UI
+      this._updateUIFromSettings();
       
-      // Set up event listeners using delegation where possible
-      if (this.uiElements.settingsButton) {
-        this.uiElements.settingsButton.addEventListener('click', () => this.openSettings());
+      // Set up event listeners
+      this._setupEventListeners();
+    }
+    
+    /**
+     * Set up event listeners
+     * @private
+     */
+    _setupEventListeners() {
+      // Settings panel toggling
+      if (this.elements.settingsButton) {
+        this.elements.settingsButton.addEventListener('click', () => this.openSettings());
       }
       
-      if (this.uiElements.sidebarSettingsBtn) {
-        this.uiElements.sidebarSettingsBtn.addEventListener('click', () => {
+      if (this.elements.sidebarSettingsBtn) {
+        this.elements.sidebarSettingsBtn.addEventListener('click', () => {
           this.openSettings();
           const sidebar = document.getElementById('sidebar');
           if (sidebar) sidebar.classList.remove('open');
         });
       }
       
-      if (this.uiElements.closeSettings) {
-        this.uiElements.closeSettings.addEventListener('click', () => this.closeSettings());
+      if (this.elements.closeSettings) {
+        this.elements.closeSettings.addEventListener('click', () => this.closeSettings());
       }
       
-      if (this.uiElements.overlay) {
-        this.uiElements.overlay.addEventListener('click', () => this.closeSettings());
+      if (this.elements.overlay) {
+        this.elements.overlay.addEventListener('click', (e) => {
+          // Only close if clicking the overlay directly
+          if (e.target === this.elements.overlay) {
+            this.closeSettings();
+          }
+        });
       }
       
-      if (this.uiElements.saveSettings) {
-        this.uiElements.saveSettings.addEventListener('click', () => this.saveSettingsFromUI());
+      // Save settings
+      if (this.elements.saveSettings) {
+        this.elements.saveSettings.addEventListener('click', () => this.saveSettingsFromUI());
       }
       
-      // Setup specialized input handlers
-      this.setupInputHandlers();
+      // Set up specialized input handlers
+      this._setupInputHandlers();
       
-      // Add presets selector listener
-      if (this.uiElements.presetSelector) {
-        this.uiElements.presetSelector.addEventListener('change', (e) => {
+      // Preset selector
+      if (this.elements.presetSelector) {
+        this.elements.presetSelector.addEventListener('change', (e) => {
           const preset = e.target.value;
-          if (preset && this.config.presets[preset]) {
+          if (preset && this.presets[preset]) {
             this.applyPreset(preset);
           }
         });
       }
       
       // Export/import handlers
-      if (this.uiElements.exportSettingsBtn) {
-        this.uiElements.exportSettingsBtn.addEventListener('click', () => this.exportSettings());
+      if (this.elements.exportSettingsBtn) {
+        this.elements.exportSettingsBtn.addEventListener('click', () => this.exportSettings());
       }
       
-      if (this.uiElements.importSettingsBtn) {
-        this.uiElements.importSettingsBtn.addEventListener('click', () => this.importSettings());
+      if (this.elements.importSettingsBtn) {
+        this.elements.importSettingsBtn.addEventListener('click', () => this.importSettings());
       }
+      
+      // Reset settings
+      if (this.elements.resetSettingsBtn) {
+        this.elements.resetSettingsBtn.addEventListener('click', () => this.resetSettings());
+      }
+      
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        // Close settings panel with ESC key
+        if (e.key === 'Escape' && this.isSettingsPanelOpen()) {
+          this.closeSettings();
+        }
+        
+        // Open settings with Ctrl+, (common shortcut)
+        if (e.key === ',' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          this.openSettings();
+        }
+        
+        // Save settings with Ctrl+S while panel is open
+        if (e.key === 's' && (e.ctrlKey || e.metaKey) && this.isSettingsPanelOpen()) {
+          e.preventDefault();
+          this.saveSettingsFromUI();
+        }
+      });
     }
     
     /**
      * Set up specialized input handlers
+     * @private
      */
-    setupInputHandlers() {
-      // Temperature slider with real-time value display
-      if (this.uiElements.temperature && this.uiElements.temperatureValue) {
-        this.uiElements.temperature.addEventListener('input', (e) => {
-          this.uiElements.temperatureValue.textContent = e.target.value;
-          // Optional: Preview changes in real-time
-          this.debouncedSettingChange('temperature', parseFloat(e.target.value));
-        });
-      }
-      
-      // Thinking budget with usage info update
-      if (this.uiElements.thinkingBudget) {
-        this.uiElements.thinkingBudget.addEventListener('input', (e) => {
-          this.updateUsageInfo(parseInt(e.target.value));
-          // Optional: Preview changes in real-time
-          this.debouncedSettingChange('thinkingBudget', parseInt(e.target.value));
-        });
+    _setupInputHandlers() {
+      // Set up real-time preview for inputs
+      for (const [key, element] of Object.entries(this.elements)) {
+        // Skip non-schema elements
+        if (!this.schema[key] || !element) continue;
+        
+        const schema = this.schema[key];
+        
+        // Handle input events for real-time preview
+        if (schema.type === 'boolean' && element.type === 'checkbox') {
+          element.addEventListener('change', (e) => {
+            this.previewSetting(key, e.target.checked);
+            this.pendingChanges[key] = e.target.checked;
+            this.hasUnsavedChanges = true;
+            this._updateSaveButtonState();
+          });
+        } else if (schema.type === 'number') {
+          element.addEventListener('input', (e) => {
+            let value = schema.sanitize ? 
+              schema.sanitize(e.target.value) : 
+              parseFloat(e.target.value);
+              
+            this.previewSetting(key, value);
+            this.pendingChanges[key] = value;
+            this.hasUnsavedChanges = true;
+            this._updateSaveButtonState();
+            
+            // Special cases
+            if (key === 'temperature' && this.elements.temperatureValue) {
+              this.elements.temperatureValue.textContent = value.toFixed(1);
+            } else if (key === 'thinkingBudget') {
+              this.updateUsageInfo(value);
+            }
+          });
+        } else {
+          element.addEventListener('input', (e) => {
+            let value = schema.sanitize ? 
+              schema.sanitize(e.target.value) : 
+              e.target.value;
+              
+            this.previewSetting(key, value);
+            this.pendingChanges[key] = value;
+            this.hasUnsavedChanges = true;
+            this._updateSaveButtonState();
+          });
+        }
       }
       
       // API key field with password toggle
-      if (this.uiElements.apiKey && this.uiElements.togglePassword) {
-        this.uiElements.togglePassword.addEventListener('click', () => {
-          const apiKeyInput = this.uiElements.apiKey;
-          const showIcon = this.uiElements.showPasswordIcon;
-          const hideIcon = this.uiElements.hidePasswordIcon;
+      if (this.elements.apiKey && this.elements.togglePassword) {
+        this.elements.togglePassword.addEventListener('click', () => {
+          const apiKeyInput = this.elements.apiKey;
+          const showIcon = this.elements.showPasswordIcon;
+          const hideIcon = this.elements.hidePasswordIcon;
           
           if (apiKeyInput.type === 'password') {
             apiKeyInput.type = 'text';
@@ -295,92 +1072,183 @@ const SETTINGS_CONFIG = {
           }
         });
       }
-      
-      // Set up keyboard shortcuts
-      document.addEventListener('keydown', (e) => {
-        // Close settings panel with ESC key
-        if (e.key === 'Escape' && this.isSettingsPanelOpen()) {
-          this.closeSettings();
-        }
-        
-        // Open settings with Ctrl+, (common shortcut)
-        if (e.key === ',' && (e.ctrlKey || e.metaKey)) {
-          e.preventDefault();
-          this.openSettings();
-        }
-      });
     }
     
     /**
-     * Populate UI with current settings
+     * Update UI elements from settings
+     * @private
      */
-    populateUI() {
-      Object.entries(this.settings).forEach(([key, value]) => {
-        const element = this.uiElements[key];
-        if (!element) return;
+    _updateUIFromSettings() {
+      for (const [key, value] of Object.entries(this.settings)) {
+        const element = this.elements[key];
+        if (!element) continue;
         
-        const schema = this.config.schema[key];
-        if (!schema) return;
+        const schema = this.schema[key];
+        if (!schema) continue;
         
         // Handle different input types
         if (element.type === 'checkbox') {
           element.checked = !!value;
         } else if (key === 'apiKey' && schema.sensitive) {
+          // For API key, only set non-empty values
           element.value = value || '';
         } else {
           element.value = value;
         }
         
-        // Handle special cases
-        if (key === 'temperature' && this.uiElements.temperatureValue) {
-          this.uiElements.temperatureValue.textContent = value;
+        // Special cases
+        if (key === 'temperature' && this.elements.temperatureValue) {
+          this.elements.temperatureValue.textContent = typeof value === 'number' ? 
+            value.toFixed(1) : value;
         }
-      });
+      }
       
       // Update additional UI elements
       this.updateUsageInfo(this.settings.thinkingBudget);
       this.updateModelIndicator(this.settings.model);
+      
+      // Reset pending changes
+      this.pendingChanges = {};
+      this.hasUnsavedChanges = false;
+      this._updateSaveButtonState();
     }
     
     /**
-     * Debounced setting change handler for real-time previewing
-     * @param {string} setting - Setting key
-     * @param {any} value - New setting value
+     * Preview a setting change without saving
+     * @param {string} key - Setting key
+     * @param {any} value - New value
+     * @private
      */
-    debouncedSettingChange(setting, value) {
-      // Update immediately but don't save to storage
-      const oldValue = this.settings[setting];
-      this.settings[setting] = value;
+    _previewSetting(key, value) {
+      // Emit preview event for UI updates
+      this.events.emit('setting-preview', { 
+        key, 
+        value, 
+        previousValue: this.settings[key]
+      });
       
-      // Emit change event for real-time preview
-      this.events.emit('setting-preview', { key: setting, value, oldValue });
-      
-      // Additional UI updates for specific settings
-      if (setting === 'model') {
-        this.updateModelIndicator(value);
-      } else if (setting === 'thinkingBudget') {
-        this.updateUsageInfo(value);
+      // Special case for theme - apply immediately for preview
+      if (key === 'theme') {
+        this._updateTheme(value);
       }
+    }
+    
+    /**
+     * Update save button state based on changes
+     * @private
+     */
+    _updateSaveButtonState() {
+      if (!this.elements.saveSettings) return;
+      
+      this.elements.saveSettings.disabled = !this.hasUnsavedChanges;
+      
+      if (this.hasUnsavedChanges) {
+        this.elements.saveSettings.classList.add('highlight');
+      } else {
+        this.elements.saveSettings.classList.remove('highlight');
+      }
+    }
+    
+    /**
+     * Initialize theme based on settings
+     * @private
+     */
+    _initializeTheme() {
+      const theme = this.settings.theme || 'system';
+      this._updateTheme(theme);
+    }
+    
+    /**
+     * Set up media query listeners
+     * @private
+     */
+    _setupMediaListeners() {
+      // Listen for system theme changes
+      const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      
+      // Remove previous listener if exists (avoids duplicates on re-init)
+      darkModeMediaQuery.removeEventListener('change', this._boundHandleThemePrefChange);
+      
+      // Add listener with bound method
+      darkModeMediaQuery.addEventListener('change', this._boundHandleThemePrefChange);
+    }
+    
+    /**
+     * Handle system theme preference change
+     * @param {MediaQueryListEvent} e - Media query change event
+     * @private
+     */
+    _handleThemePreferenceChange(e) {
+      // Only apply if theme is set to 'system'
+      if (this.settings.theme === 'system') {
+        const newTheme = e.matches ? 'dark' : 'light';
+        this._applyTheme(newTheme);
+      }
+    }
+    
+    /**
+     * Update theme based on setting
+     * @param {string} themeSetting - Theme setting (light, dark, system)
+     * @private
+     */
+    _updateTheme(themeSetting) {
+      const body = document.body;
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      // Remove existing theme classes
+      DOMUtil.removeClasses(body, 'light-theme', 'dark-theme');
+      
+      if (themeSetting === 'system') {
+        // Use system preference
+        const systemTheme = prefersDark ? 'dark' : 'light';
+        DOMUtil.addClasses(body, `${systemTheme}-theme`);
+        
+        // Apply theme
+        this._applyTheme(systemTheme);
+      } else {
+        // Apply specific theme
+        DOMUtil.addClasses(body, `${themeSetting}-theme`);
+        
+        // Apply theme
+        this._applyTheme(themeSetting);
+      }
+    }
+    
+    /**
+     * Apply a specific theme
+     * @param {string} theme - Theme to apply ('light' or 'dark')
+     * @private
+     */
+    _applyTheme(theme) {
+      // Set CSS variable or data attribute for theme
+      document.documentElement.setAttribute('data-theme', theme);
+      
+      // Emit theme changed event
+      this.events.emit('theme-changed', { theme });
     }
     
     /**
      * Open settings panel
      */
     openSettings() {
-      if (!this.uiElements.settingsPanel || !this.uiElements.overlay) {
+      if (!this.elements.settingsPanel || !this.elements.overlay) {
         console.error('Settings panel elements not found');
         return;
       }
       
+      // Reset pending changes
+      this.pendingChanges = {};
+      this.hasUnsavedChanges = false;
+      
       // Refresh UI with current settings
-      this.populateUI();
+      this._updateUIFromSettings();
       
       // Show panel with animation
-      this.uiElements.settingsPanel.classList.add('open');
-      this.uiElements.overlay.classList.add('open');
+      DOMUtil.addClasses(this.elements.settingsPanel, 'open');
+      DOMUtil.addClasses(this.elements.overlay, 'open');
       
       // Focus on first input (but not API key for security)
-      const firstInput = this.uiElements.model || this.uiElements.temperature;
+      const firstInput = this.elements.model || this.elements.temperature;
       if (firstInput) {
         setTimeout(() => firstInput.focus(), 100);
       }
@@ -391,23 +1259,38 @@ const SETTINGS_CONFIG = {
     
     /**
      * Close settings panel
+     * @param {boolean} [skipConfirm=false] - Skip confirmation dialog for unsaved changes
+     * @returns {boolean} Whether the panel was closed
      */
-    closeSettings() {
-      if (!this.uiElements.settingsPanel || !this.uiElements.overlay) return;
+    closeSettings(skipConfirm = false) {
+      if (!this.elements.settingsPanel || !this.elements.overlay) return false;
       
-      this.uiElements.settingsPanel.classList.remove('open');
-      this.uiElements.overlay.classList.remove('open');
+      // Check for unsaved changes
+      if (!skipConfirm && this.hasUnsavedChanges) {
+        const confirmed = confirm('You have unsaved changes. Are you sure you want to close settings?');
+        if (!confirmed) return false;
+      }
+      
+      // Hide panel
+      DOMUtil.removeClasses(this.elements.settingsPanel, 'open');
+      DOMUtil.removeClasses(this.elements.overlay, 'open');
+      
+      // Reset changes
+      this.pendingChanges = {};
+      this.hasUnsavedChanges = false;
       
       // Emit event
       this.events.emit('settings-closed');
+      
+      return true;
     }
     
     /**
      * Check if settings panel is open
-     * @returns {boolean}
+     * @returns {boolean} Whether settings panel is open
      */
     isSettingsPanelOpen() {
-      return this.uiElements.settingsPanel?.classList.contains('open') || false;
+      return this.elements.settingsPanel?.classList.contains('open') || false;
     }
     
     /**
@@ -418,11 +1301,10 @@ const SETTINGS_CONFIG = {
       let hasErrors = false;
       
       // Extract values from UI elements
-      Object.keys(this.config.schema).forEach(key => {
-        const element = this.uiElements[key];
-        if (!element) return;
+      for (const [key, schema] of Object.entries(this.schema)) {
+        const element = this.elements[key];
+        if (!element) continue;
         
-        const schema = this.config.schema[key];
         let value;
         
         // Extract value based on input type
@@ -437,8 +1319,8 @@ const SETTINGS_CONFIG = {
         // Validate value
         if (schema.validate && !schema.validate(value)) {
           hasErrors = true;
-          this.showValidationError(key, value);
-          return;
+          this._showValidationError(key, value);
+          continue;
         }
         
         // Special handling for sensitive data
@@ -450,7 +1332,7 @@ const SETTINGS_CONFIG = {
         } else {
           newSettings[key] = value;
         }
-      });
+      }
       
       // Don't save if validation errors
       if (hasErrors) return;
@@ -458,53 +1340,54 @@ const SETTINGS_CONFIG = {
       // Save settings
       this.setSettings(newSettings);
       
-      // Close panel
-      this.closeSettings();
+      // Reset pending changes
+      this.pendingChanges = {};
+      this.hasUnsavedChanges = false;
+      this._updateSaveButtonState();
+      
+      // Close panel if we saved successfully
+      this.closeSettings(true);
       
       // Show success message
-      this.showToastNotification({
-        title: 'Settings Saved',
-        message: 'Your settings have been updated successfully.',
-        type: 'success'
-      });
+      ToastManager.success(
+        'Settings Saved',
+        'Your settings have been updated successfully.'
+      );
     }
     
     /**
      * Show validation error for a setting
      * @param {string} key - Setting key
      * @param {any} value - Invalid value
+     * @private
      */
-    showValidationError(key, value) {
-      const schema = this.config.schema[key];
-      let message = `Invalid value for ${key}`;
+    _showValidationError(key, value) {
+      const schema = this.schema[key];
+      let message = `Invalid value for ${schema.label || key}`;
       
       // Create more specific error messages
       if (schema.type === 'number') {
         if (schema.min !== undefined && schema.max !== undefined) {
-          message = `${key} must be between ${schema.min} and ${schema.max}`;
+          message = `${schema.label || key} must be between ${schema.min} and ${schema.max}`;
         } else if (schema.min !== undefined) {
-          message = `${key} must be at least ${schema.min}`;
+          message = `${schema.label || key} must be at least ${schema.min}`;
         } else if (schema.max !== undefined) {
-          message = `${key} must be at most ${schema.max}`;
+          message = `${schema.label || key} must be at most ${schema.max}`;
         }
       }
       
       // Show error message
-      this.showToastNotification({
-        title: 'Invalid Setting',
-        message,
-        type: 'error'
-      });
+      ToastManager.error('Invalid Setting', message);
       
       // Highlight the input
-      const element = this.uiElements[key];
+      const element = this.elements[key];
       if (element) {
-        element.classList.add('error');
+        DOMUtil.addClasses(element, 'error');
         element.focus();
         
         // Remove error class after animation
         setTimeout(() => {
-          element.classList.remove('error');
+          DOMUtil.removeClasses(element, 'error');
         }, 2000);
       }
     }
@@ -514,13 +1397,13 @@ const SETTINGS_CONFIG = {
      * @param {string} presetName - Name of the preset
      */
     applyPreset(presetName) {
-      const preset = this.config.presets[presetName];
+      const preset = this.presets[presetName];
       if (!preset) return;
       
       // Update UI with preset values
-      Object.entries(preset).forEach(([key, value]) => {
-        const element = this.uiElements[key];
-        if (!element) return;
+      for (const [key, value] of Object.entries(preset)) {
+        const element = this.elements[key];
+        if (!element) continue;
         
         // Update element
         if (element.type === 'checkbox') {
@@ -529,20 +1412,52 @@ const SETTINGS_CONFIG = {
           element.value = value;
         }
         
-        // Update any associated displays
-        if (key === 'temperature' && this.uiElements.temperatureValue) {
-          this.uiElements.temperatureValue.textContent = value;
+        // Update associated displays
+        if (key === 'temperature' && this.elements.temperatureValue) {
+          this.elements.temperatureValue.textContent = value.toFixed(1);
         } else if (key === 'thinkingBudget') {
           this.updateUsageInfo(value);
         }
-      });
+        
+        // Add to pending changes
+        this.pendingChanges[key] = value;
+      }
+      
+      // Mark as having unsaved changes
+      this.hasUnsavedChanges = true;
+      this._updateSaveButtonState();
       
       // Show notification
-      this.showToastNotification({
-        title: 'Preset Applied',
-        message: `Applied the "${presetName}" preset settings.`,
-        type: 'info'
-      });
+      ToastManager.info(
+        'Preset Applied',
+        `Applied the "${presetName}" preset settings. Click Save to keep these changes.`
+      );
+    }
+    
+    /**
+     * Reset settings to defaults
+     */
+    resetSettings() {
+      if (confirm('Are you sure you want to reset all settings to defaults? This cannot be undone.')) {
+        // Get default settings
+        const defaultSettings = this._getDefaultSettings();
+        
+        // Preserve API key if user has one
+        if (this.settings.apiKey) {
+          defaultSettings.apiKey = this.settings.apiKey;
+        }
+        
+        // Apply defaults
+        this.setSettings(defaultSettings);
+        
+        // Update UI
+        this._updateUIFromSettings();
+        
+        ToastManager.info(
+          'Settings Reset',
+          'All settings have been reset to default values.'
+        );
+      }
     }
     
     /**
@@ -550,21 +1465,19 @@ const SETTINGS_CONFIG = {
      * @param {number} budget - Thinking budget in tokens
      */
     updateUsageInfo(budget) {
-      if (!this.uiElements.usageInfo) return;
+      if (!this.elements.usageInfo) return;
       
       // Format number with commas
       const formattedBudget = new Intl.NumberFormat().format(budget);
-      this.uiElements.usageInfo.textContent = `Thinking Budget: ${formattedBudget} tokens`;
+      this.elements.usageInfo.textContent = `Thinking Budget: ${formattedBudget} tokens`;
       
-      // Optional: Add color coding
+      // Add color coding
+      DOMUtil.removeClasses(this.elements.usageInfo, 'high-budget', 'low-budget');
+      
       if (budget > 20000) {
-        this.uiElements.usageInfo.classList.add('high-budget');
-        this.uiElements.usageInfo.classList.remove('low-budget');
+        DOMUtil.addClasses(this.elements.usageInfo, 'high-budget');
       } else if (budget < 5000) {
-        this.uiElements.usageInfo.classList.add('low-budget');
-        this.uiElements.usageInfo.classList.remove('high-budget');
-      } else {
-        this.uiElements.usageInfo.classList.remove('high-budget', 'low-budget');
+        DOMUtil.addClasses(this.elements.usageInfo, 'low-budget');
       }
     }
     
@@ -577,7 +1490,7 @@ const SETTINGS_CONFIG = {
       if (!modelName) return;
       
       // Find model in schema options
-      const modelOption = this.config.schema.model.options.find(opt => opt.value === model);
+      const modelOption = this.schema.model.options.find(opt => opt.value === model);
       
       if (modelOption) {
         modelName.textContent = modelOption.label;
@@ -586,7 +1499,7 @@ const SETTINGS_CONFIG = {
         modelName.textContent = model.split('-').slice(0, 3).join(' ');
       }
       
-      // Optional: Update model dot color based on model capability
+      // Update model dot color based on model capability
       const modelDot = document.querySelector('.model-dot');
       if (modelDot) {
         if (model.includes('opus')) {
@@ -609,16 +1522,16 @@ const SETTINGS_CONFIG = {
         // Create a clean copy of settings (without sensitive data)
         const exportData = {
           settings: { ...this.settings },
-          version: this.config.version,
+          version: this.version,
           timestamp: new Date().toISOString()
         };
         
         // Remove sensitive data
-        Object.keys(this.config.schema).forEach(key => {
-          if (this.config.schema[key].sensitive) {
+        for (const [key, schema] of Object.entries(this.schema)) {
+          if (schema.sensitive) {
             exportData.settings[key] = '';
           }
-        });
+        }
         
         // Convert to JSON
         const jsonString = JSON.stringify(exportData, null, 2);
@@ -629,7 +1542,7 @@ const SETTINGS_CONFIG = {
         const a = document.createElement('a');
         
         a.href = url;
-        a.download = `ai-assistant-settings-${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `claude-assistant-settings-${new Date().toISOString().slice(0, 10)}.json`;
         document.body.appendChild(a);
         a.click();
         
@@ -639,18 +1552,17 @@ const SETTINGS_CONFIG = {
           URL.revokeObjectURL(url);
         }, 100);
         
-        this.showToastNotification({
-          title: 'Settings Exported',
-          message: 'Your settings have been exported successfully.',
-          type: 'success'
-        });
+        ToastManager.success(
+          'Settings Exported',
+          'Your settings have been exported successfully.'
+        );
       } catch (error) {
         console.error('Failed to export settings:', error);
-        this.showToastNotification({
-          title: 'Export Failed',
-          message: 'Could not export settings: ' + error.message,
-          type: 'error'
-        });
+        
+        ToastManager.error(
+          'Export Failed',
+          'Could not export settings: ' + error.message
+        );
       }
     }
     
@@ -679,47 +1591,63 @@ const SETTINGS_CONFIG = {
             
             // Merge with current settings
             const newSettings = { ...this.settings };
+            let changedCount = 0;
             
             // Only import valid settings from our schema
-            Object.keys(this.config.schema).forEach(key => {
+            for (const [key, schema] of Object.entries(this.schema)) {
               if (importData.settings[key] !== undefined && 
-                  key in this.config.schema &&
-                  !this.config.schema[key].sensitive) {
+                  !schema.sensitive) { // Never import sensitive data
+                
                 // Validate and sanitize
-                const schema = this.config.schema[key];
                 let value = importData.settings[key];
                 
-                // Skip validation for null/empty values
-                if (value === null || value === '') return;
+                // Skip validation for null/empty values (use current value)
+                if (value === null || value === '') continue;
                 
-                if (schema.sanitize) {
-                  value = schema.sanitize(value);
-                }
-                
-                if (!schema.validate || schema.validate(value)) {
-                  newSettings[key] = value;
+                try {
+                  // Sanitize if needed
+                  if (schema.sanitize) {
+                    value = schema.sanitize(value);
+                  }
+                  
+                  // Validate
+                  if (!schema.validate || schema.validate(value)) {
+                    if (newSettings[key] !== value) {
+                      newSettings[key] = value;
+                      changedCount++;
+                    }
+                  }
+                } catch (e) {
+                  console.warn(`Skipping invalid imported setting: ${key}`, e);
                 }
               }
-            });
+            }
             
-            // Save merged settings
-            this.setSettings(newSettings);
-            
-            // Update UI
-            this.populateUI();
-            
-            this.showToastNotification({
-              title: 'Settings Imported',
-              message: 'Settings have been imported successfully.',
-              type: 'success'
-            });
+            // Only update if at least one setting changed
+            if (changedCount > 0) {
+              // Save merged settings
+              this.setSettings(newSettings);
+              
+              // Update UI
+              this._updateUIFromSettings();
+              
+              ToastManager.success(
+                'Settings Imported',
+                `Successfully imported ${changedCount} settings`
+              );
+            } else {
+              ToastManager.info(
+                'No Changes',
+                'Imported settings were identical or invalid'
+              );
+            }
           } catch (error) {
             console.error('Failed to import settings:', error);
-            this.showToastNotification({
-              title: 'Import Failed',
-              message: 'Could not import settings: ' + error.message,
-              type: 'error'
-            });
+            
+            ToastManager.error(
+              'Import Failed',
+              'Could not import settings: ' + error.message
+            );
           }
         };
         
@@ -729,208 +1657,111 @@ const SETTINGS_CONFIG = {
       // Trigger file selection
       fileInput.click();
     }
-  
-    /**
-     * Handle initialization error
-     * @param {Error} error - Error object
-     */
-    handleInitError(error) {
-      // Reset to default settings
-      this.settings = this.getDefaultSettings();
-      
-      // Try to save defaults
-      try {
-        this.saveSettings(this.settings);
-      } catch (e) {
-        console.error('Failed to save default settings:', e);
-      }
-      
-      // Show error message
-      this.showToastNotification({
-        title: 'Settings Error',
-        message: 'Could not load settings. Defaults have been applied.',
-        type: 'error'
-      });
-      
-      // Emit error event
-      this.events.emit('error', { 
-        message: 'Failed to initialize settings',
-        error
-      });
-    }
-  
-    /**
-     * Get default settings object
-     * @returns {Object} Default settings
-     */
-    getDefaultSettings() {
-      const defaults = {};
-      
-      // Extract defaults from schema
-      Object.entries(this.config.schema).forEach(([key, schema]) => {
-        defaults[key] = schema.default;
-      });
-      
-      return defaults;
-    }
-  
-    /**
-     * Load settings from storage with fallback chain
-     */
-    async loadSettings() {
-      // Try localStorage first
-      try {
-        const settingsString = localStorage.getItem(this.config.storageKey);
-        if (settingsString) {
-          const storedSettings = JSON.parse(settingsString);
-          this.settings = storedSettings;
-          return;
-        }
-      } catch (error) {
-        console.error('Failed to load settings from localStorage:', error);
-      }
-      
-      // Try sessionStorage as fallback
-      try {
-        const sessionSettingsString = sessionStorage.getItem(this.config.storageKey);
-        if (sessionSettingsString) {
-          const sessionSettings = JSON.parse(sessionSettingsString);
-          this.settings = sessionSettings;
-          return;
-        }
-      } catch (error) {
-        console.error('Failed to load settings from sessionStorage:', error);
-      }
-      
-      // Use default settings if all else fails
-      this.settings = this.getDefaultSettings();
-    }
-  
-    /**
-     * Save settings to storage with fallbacks
-     * @param {Object} settings - Settings to save
-     */
-    saveSettings(settings) {
-      const settingsString = JSON.stringify(settings);
-      
-      // Try localStorage first
-      try {
-        localStorage.setItem(this.config.storageKey, settingsString);
-      } catch (error) {
-        console.error('Failed to save settings to localStorage:', error);
-        
-        // Try sessionStorage as fallback
-        try {
-          sessionStorage.setItem(this.config.storageKey, settingsString);
-        } catch (innerError) {
-          console.error('Failed to save settings to sessionStorage:', innerError);
-          throw new Error('Could not save settings to any storage');
-        }
-      }
-    }
-  
-    /**
-     * Validate settings and migrate if needed
-     */
-    validateAndMigrateSettings() {
-      const newSettings = { ...this.settings };
-      let needsUpdate = false;
-      
-      // Ensure all keys exist with valid values
-      Object.entries(this.config.schema).forEach(([key, schema]) => {
-        // Check if key exists
-        if (!(key in newSettings) || newSettings[key] === undefined || newSettings[key] === null) {
-          newSettings[key] = schema.default;
-          needsUpdate = true;
-          return;
-        }
-        
-        // Validate value
-        const value = newSettings[key];
-        
-        if (schema.validate && !schema.validate(value)) {
-          // Try to sanitize
-          if (schema.sanitize) {
-            try {
-              newSettings[key] = schema.sanitize(value);
-              needsUpdate = true;
-            } catch (e) {
-              // Sanitization failed, use default
-              newSettings[key] = schema.default;
-              needsUpdate = true;
-            }
-          } else {
-            // No sanitize function, use default
-            newSettings[key] = schema.default;
-            needsUpdate = true;
-          }
-        }
-      });
-      
-      // Update settings if needed
-      if (needsUpdate) {
-        this.settings = newSettings;
-        try {
-          this.saveSettings(newSettings);
-        } catch (error) {
-          console.error('Failed to save migrated settings:', error);
-        }
-      }
-    }
-  
+    
+    // ===============================================================
+    // Public API
+    // ===============================================================
+    
     /**
      * Update settings
      * @param {Object} newSettings - New settings object
      */
     setSettings(newSettings) {
-      // Merge with existing settings
-      const updated = { ...this.settings, ...newSettings };
+      // Track changes
+      const changedKeys = [];
+      const changedSettings = {};
       
-      // Validate and sanitize
-      Object.keys(updated).forEach(key => {
-        const schema = this.config.schema[key];
-        if (!schema) return;
+      // Validate and apply changes
+      for (const [key, value] of Object.entries(newSettings)) {
+        // Skip unknown keys
+        if (!this.schema[key]) continue;
         
+        const schema = this.schema[key];
+        let processedValue = value;
+        
+        // Sanitize if needed
         if (schema.sanitize) {
-          updated[key] = schema.sanitize(updated[key]);
+          processedValue = schema.sanitize(value);
         }
-      });
+        
+        // Validate
+        if (schema.validate && !schema.validate(processedValue)) {
+          console.warn(`Invalid value for setting ${key}:`, value);
+          continue;
+        }
+        
+        // Check if value changed
+        if (this.settings[key] !== processedValue) {
+          changedSettings[key] = processedValue;
+          changedKeys.push(key);
+        }
+      }
       
-      // Save to instance
-      this.settings = updated;
+      // Skip save if nothing changed
+      if (changedKeys.length === 0) return;
+      
+      // Update settings object
+      for (const key of changedKeys) {
+        this.settings[key] = changedSettings[key];
+      }
       
       // Save to storage
-      try {
-        this.saveSettings(updated);
-      } catch (error) {
-        console.error('Failed to save settings:', error);
-        this.showToastNotification({
-          title: 'Error',
-          message: 'Failed to save settings: ' + error.message,
-          type: 'error'
+      this._saveSettings(this.settings);
+      
+      // Apply runtime changes
+      if (changedKeys.includes('theme')) {
+        this._updateTheme(this.settings.theme);
+      }
+      
+      if (changedKeys.includes('model')) {
+        this.updateModelIndicator(this.settings.model);
+      }
+      
+      // Emit change events for each changed setting
+      for (const key of changedKeys) {
+        this.events.emit('setting-changed', { 
+          key, 
+          value: this.settings[key],
+          previousValue: changedSettings[key]
         });
       }
       
-      // Update UI elements that reflect settings
-      this.updateModelIndicator(updated.model);
-      this.updateUsageInfo(updated.thinkingBudget);
-      
-      // Emit change event
-      this.events.emit('settings-changed', updated);
+      // Emit general settings changed event
+      this.events.emit('settings-changed', { 
+        settings: this.getPublicSettings(),
+        changedKeys
+      });
     }
-  
+    
     /**
-     * Get current settings
+     * Get current settings (full copy)
      * @returns {Object} Current settings
      */
     getSettings() {
       return { ...this.settings };
     }
-  
+    
+    /**
+     * Get public version of settings (omitting sensitive data)
+     * @returns {Object} Settings without sensitive data
+     */
+    getPublicSettings() {
+      const publicSettings = { ...this.settings };
+      
+      // Remove sensitive data
+      for (const [key, schema] of Object.entries(this.schema)) {
+        if (schema.sensitive && publicSettings[key]) {
+          publicSettings[key] = true; // Indicate value exists without revealing it
+        }
+      }
+      
+      return publicSettings;
+    }
+    
     /**
      * Get a specific setting
      * @param {string} key - Setting key
-     * @param {any} defaultValue - Default value if setting doesn't exist
+     * @param {any} defaultValue - Default value if not found
      * @returns {any} Setting value
      */
     getSetting(key, defaultValue = undefined) {
@@ -940,152 +1771,163 @@ const SETTINGS_CONFIG = {
     /**
      * Update a single setting
      * @param {string} key - Setting key
-     * @param {any} value - Setting value
+     * @param {any} value - New value
      * @returns {boolean} Success status
      */
     updateSetting(key, value) {
-      if (!(key in this.config.schema)) {
+      // Check if key exists in schema
+      if (!(key in this.schema)) {
+        console.warn(`Attempt to update unknown setting: ${key}`);
         return false;
       }
       
-      const schema = this.config.schema[key];
-      
-      // Sanitize if needed
-      if (schema.sanitize) {
-        value = schema.sanitize(value);
-      }
-      
-      // Validate
-      if (schema.validate && !schema.validate(value)) {
-        return false;
-      }
-      
-      // Update
-      this.settings[key] = value;
-      
-      // Save to storage
-      try {
-        this.saveSettings(this.settings);
-      } catch (error) {
-        console.error(`Failed to save setting ${key}:`, error);
-        return false;
-      }
-      
-      // Update UI if needed
-      if (key === 'model') {
-        this.updateModelIndicator(value);
-      } else if (key === 'thinkingBudget') {
-        this.updateUsageInfo(value);
-      }
-      
-      // Emit change event
-      this.events.emit('setting-changed', { key, value });
+      // Update via setSettings for validation
+      const update = {};
+      update[key] = value;
+      this.setSettings(update);
       
       return true;
     }
     
     /**
-     * Show a toast notification
-     * Delegates to global showToast function if available
-     * @param {Object} options - Toast options
+     * Check if the user has set up required settings
+     * @returns {boolean} Whether setup is complete
      */
-    showToastNotification(options) {
-      if (typeof showToast === 'function') {
-        showToast(options);
-      } else {
-        console.log(`[${options.type}] ${options.title}: ${options.message}`);
+    isSetupComplete() {
+      // Check if API key is set
+      return !!this.settings.apiKey;
+    }
+    
+    /**
+     * Register a callback for settings events
+     * @param {string} event - Event name
+     * @param {Function} callback - Event callback
+     * @returns {Function} Unsubscribe function
+     */
+    on(event, callback) {
+      return this.events.on(event, callback);
+    }
+    
+    /**
+     * Get all available settings categories
+     * @returns {Object[]} Settings categories
+     */
+    getCategories() {
+      return [...this.categories];
+    }
+    
+    /**
+     * Get settings schema
+     * @returns {Object} Settings schema
+     */
+    getSchema() {
+      return { ...this.schema };
+    }
+    
+    /**
+     * Get all settings grouped by category
+     * @returns {Object} Settings grouped by category
+     */
+    getSettingsByCategory() {
+      const result = {};
+      
+      // Initialize categories
+      for (const category of this.categories) {
+        result[category.id] = [];
       }
+      
+      // Add settings to categories
+      for (const [key, schema] of Object.entries(this.schema)) {
+        if (schema.category && result[schema.category]) {
+          result[schema.category].push({
+            key,
+            ...schema,
+            value: this.settings[key]
+          });
+        }
+      }
+      
+      return result;
     }
   }
+  
+  // Create singleton instance
+  const settingsManager = new SettingsManager();
+  
+  // ===============================================================
+  // Legacy functions for backward compatibility
+  // ===============================================================
   
   /**
-   * Simple event emitter for settings events
+   * Get current settings
+   * @returns {Object} Current settings
    */
-  class EventEmitter {
-    constructor() {
-      this.events = {};
-    }
-    
-    on(event, listener) {
-      if (!this.events[event]) {
-        this.events[event] = [];
-      }
-      this.events[event].push(listener);
-      return () => this.off(event, listener);
-    }
-    
-    off(event, listener) {
-      if (!this.events[event]) return;
-      this.events[event] = this.events[event].filter(l => l !== listener);
-    }
-    
-    emit(event, data) {
-      if (!this.events[event]) return;
-      this.events[event].forEach(listener => {
-        try {
-          listener(data);
-        } catch (error) {
-          console.error(`Error in event listener for ${event}:`, error);
-        }
-      });
-    }
-    
-    once(event, listener) {
-      const remove = this.on(event, data => {
-        remove();
-        listener(data);
-      });
-    }
-  }
-  
-  // Create global settings instance
-  const settingsManager = new SettingsManager(SETTINGS_CONFIG);
-  
-  // Export legacy functions for backward compatibility
   function getSettings() {
     return settingsManager.getSettings();
   }
   
+  /**
+   * Save settings
+   * @param {Object} settings - Settings to save
+   */
   function saveSettings(settings) {
     settingsManager.setSettings(settings);
   }
   
+  /**
+   * Update usage info display
+   * @param {number} budget - Thinking budget
+   */
   function updateUsageInfo(budget) {
     settingsManager.updateUsageInfo(budget);
   }
   
+  /**
+   * Update model indicator
+   * @param {string} model - Model identifier
+   */
   function updateModelIndicator(model) {
     settingsManager.updateModelIndicator(model);
   }
   
+  /**
+   * Open settings panel
+   */
   function openSettings() {
     settingsManager.openSettings();
   }
   
-  // Initialize settings
+  /**
+   * Initialize settings
+   */
   function initSettings() {
     // Initialize the settings manager
     settingsManager.init().then(() => {
       console.log('Settings system initialized');
       
       // Add handler for missing API key
-      settingsManager.events.on('missing-api-key', () => {
+      settingsManager.on('missing-api-key', () => {
         setTimeout(() => {
           openSettings();
-          showToast({
-            title: 'API Key Required',
-            message: 'Please set your Anthropic API key to start using the app.',
-            type: 'warning'
-          });
+          ToastManager.warning(
+            'API Key Required',
+            'Please set your Anthropic API key to start using the app.'
+          );
         }, 500);
       });
     }).catch(error => {
       console.error('Failed to initialize settings:', error);
+      
+      ToastManager.error(
+        'Settings Error',
+        'Failed to initialize settings. Using defaults.'
+      );
     });
   }
   
   // Export both legacy functions and modern API
   export {
+    // Legacy API
     initSettings,
     getSettings,
     saveSettings,
@@ -1095,5 +1937,7 @@ const SETTINGS_CONFIG = {
     
     // Modern API
     settingsManager,
-    SETTINGS_CONFIG
+    SETTINGS_SCHEMA,
+    SETTINGS_CATEGORIES,
+    SETTINGS_PRESETS
   };
