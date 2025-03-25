@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="loading">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Claude Chat Assistant — Powered by Claude 3.7 AI</title>
+    
+    <!-- Core meta -->
+    <meta name="description" content="Experience intelligent conversations with Claude 3.7 AI. Enhanced with thinking mode for complex reasoning, code generation, creative writing, and problem solving.">
+    <meta name="theme-color" content="#7e57c2" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1a1a20" media="(prefers-color-scheme: dark)">
+    <meta name="color-scheme" content="light dark">
+    <meta name="application-name" content="Claude Chat">
+    
+    <!-- Security -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://storage.googleapis.com; connect-src 'self' https://api.anthropic.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="interest-cohort=(), camera=(), microphone=(), geolocation=()">
+    
+    <!-- PWA capability discovery -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Claude Chat">
+    <meta name="msapplication-TileColor" content="#7e57c2">
+    <meta name="msapplication-config" content="assets/img/browserconfig.xml">
+    
+    <!-- SEO -->
+    <meta name="keywords" content="AI assistant, Claude 3.7, AI chat, thinking mode, AI coding, language model, reasoning, creative writing, AI problem solver, GPT alternative">
+    <meta name="author" content="Anthropic Claude">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://claudechat.example.com">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://claudechat.example.com">
+    <meta property="og:title" content="Claude Chat — Intelligent AI Assistant">
+    <meta property="og:description" content="Experience intelligent conversations with Claude 3.7 AI. Enhanced with thinking mode for complex reasoning, code generation, creative writing, and problem solving.">
+    <meta property="og:image" content="https://claudechat.example.com/assets/img/og-image.webp">
+    <meta property="og:site_name" content="Claude Chat">
+    <meta property="og:locale" content="en_US">
+    
+    <!-- Twitter / X -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://claudechat.example.com">
+    <meta property="twitter:title" content="Claude Chat — Intelligent AI Assistant">
+    <meta property="twitter:description" content="Experience intelligent conversations with Claude 3.7 AI. Enhanced with thinking mode for complex reasoning, code generation, creative writing, and problem solving.">
+    <meta property="twitter:image" content="https://claudechat.example.com/assets/img/twitter-image.webp">
+    <meta name="twitter:creator" content="@anthropic">
+    
+    <!-- Favicon / App Icons -->
+    <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
+    <link rel="mask-icon" href="assets/img/safari-pinned-tab.svg" color="#7e57c2">
+    <link rel="shortcut icon" href="assets/img/favicon.ico">
+    
+    <!-- Critical CSS (inlined for performance) -->
+    <style>
+        :root {
+            --primary-color: #7e57c2;
+            --primary-dark: #4d2c91;
+            --primary-light: #b085f5;
+            --bg-color: #f8f9fb;
+            --surface-color: #ffffff;
+            --text-color: #1a1a20;
+            --text-secondary: #71717a;
+            --border-color: #e4e4e7;
+            --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'Fira Code', SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+        }
+        .dark-theme {
+            --primary-color: #9575cd;
+            --primary-dark: #b085f5;
+            --primary-light: #4d2c91;
+            --bg-color: #121212;
+            --surface-color: #1e1e24;
+            --text-color: #f1f1f3;
+            --text-secondary: #a1a1aa;
+            --border-color: #27272a;
+        }
+        html.loading {
+            visibility: hidden;
+            opacity: 0;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-sans);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .app-container {
+            display: flex;
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+        }
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        .skip-to-content {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            z-index: 100;
+            transition: top 0.3s;
+        }
+        .skip-to-content:focus {
+            top: 0;
+            outline: 2px solid var(--primary-light);
+        }
+        .loader {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-color);
+            z-index: 9999;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .loader svg {
+            width: 60px;
+            height: 60px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+    </style>
+    
+    <!-- Preload important assets -->
+    <link rel="preload" href="assets/css/main.css" as="style">
+    <link rel="preload" href="assets/js/app.js" as="script">
+    <link rel="preload" href="assets/fonts/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="assets/img/logo.svg" as="image" type="image/svg+xml">
+    
+    <!-- Preconnect to important origins -->
+    <link rel="preconnect" href="https://api.anthropic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Stylesheets (non-critical) -->
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/chat.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/settings.css">
+    <link rel="stylesheet" href="assets/css/utils.css" media="print" onload="this.media='all'">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Claude Chat Assistant",
+      "description": "Anthropic Claude 3.7 AI assistant with thinking capabilities",
+      "applicationCategory": ["Productivity", "Utility", "Communication"],
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Anthropic",
+        "url": "https://www.anthropic.com",
+        "logo": "https://claudechat.example.com/assets/img/anthropic-logo.png"
+      },
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "softwareVersion": "2.0.0",
+      "screenshot": "https://claudechat.example.com/assets/img/screenshot-wide.webp",
+      "featureList": [
+        "AI Chat",
+        "Thinking Mode",
+        "Code Generation",
+        "File Analysis",
+        "Creative Writing"
+      ]
+    }
+    </script>
+</head>
+<body>
+    <!-- Skip to content link for accessibility -->
+    <a href="#chatContainer" class="skip-to-content">Skip to content</a>
+    
+    <!-- Initial loading screen -->
+    <div class="loader" id="initialLoader" aria-label="Loading application">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="12" y1="22.08" x2="12" y2="12" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+    
+    <!-- Main application container -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar" aria-label="Chat history and navigation">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <polyline points="7.5 4.21 12 6.81 16.5 4.21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <polyline points="7.5 19.79 7.5 14.6 3 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <polyline points="21 12 16.5 14.6 16.5 19.79" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="12" y1="22.08" x2="12" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Claude Chat</span>
+                </div>
+                <button class="close-sidebar-btn" id="closeSidebarBtn" aria-label="Close sidebar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <button class="new-chat-btn" id="newChatBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                New Chat
+            </button>
+            
+            <div class="sidebar-section" aria-live="polite">
+                <h2>Recent Chats</h2>
+                <div class="chat-history-container">
+                    <ul class="chat-history" id="chatHistory" role="tablist" aria-label="Your conversations">
+                        <!-- Chat history items will be rendered here -->
+                        <li class="empty-history text-muted text-center py-2">No chats yet</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <button class="sidebar-btn settings-sidebar-btn" id="sidebarSettingsBtn" aria-label="Open settings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Settings
+                </button>
+                
+                <button class="sidebar-btn" id="toggleThemeBtn" aria-label="Toggle theme">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="theme-icon-light" aria-hidden="true">
+                        <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="theme-icon-dark" aria-hidden="true">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="themeButtonText">Toggle Theme</span>
+                </button>
+            </div>
+            
+            <div class="sidebar-version">
+                <span>v2.0.0</span>
+            </div>
+        </aside>
+
+        <!-- Main content area -->
+        <main class="main-content" aria-live="polite">
+            <header class="chat-header">
+                <button class="menu-btn" id="menuBtn" aria-label="Open sidebar menu">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                
+                <div class="chat-info">
+                    <h1>Claude 3.7 Thinking</h1>
+                    <div class="model-indicator" aria-live="polite">
+                        <span class="model-dot" aria-hidden="true"></span>
+                        <span class="model-name">Claude 3.7 Sonnet</span>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="action-button share-btn" id="shareChatBtn" aria-label="Share chat">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    
+                    <button class="action-button settings-btn" id="settingsButton" aria-label="Open settings">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="chat-container" id="chatContainer" tabindex="-1">
+                <!-- Welcome screen -->
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-content">
+                        <div class="welcome-logo" aria-hidden="true">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="7.5 4.21 12 6.81 16.5 4.21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="7.5 19.79 7.5 14.6 3 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="21 12 16.5 14.6 16.5 19.79" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        
+                        <h2>Welcome to Claude 3.7 Thinking</h2>
+                        <p class="welcome-description">Ask me anything and I'll provide thoughtful, in-depth responses. With Thinking Mode enabled, I can work through complex problems step-by-step.</p>
+                        
+                        <div class="welcome-features">
+                            <div class="feature">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 16L16 12L12 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>Step-by-step reasoning for complex problems</span>
+                            </div>
+                            <div class="feature">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 9H9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>Advanced code generation and analysis</span>
+                            </div>
+                            <div class="feature">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M21 16V8.00002C20.9996 7.6493 20.9071 7.30483 20.7315 7.00119C20.556 6.69754 20.3037 6.44539 20 6.27002L13 2.27002C12.696 2.09449 12.3511 2.00204 12 2.00204C11.6489 2.00204 11.304 2.09449 11 2.27002L4 6.27002C3.69626 6.44539 3.44398 6.69754 3.26846 7.00119C3.09294 7.30483 3.00036 7.6493 3 8.00002V16C3.00036 16.3508 3.09294 16.6952 3.26846 16.9989C3.44398 17.3025 3.69626 17.5547 4 17.73L11 21.73C11.304 21.9056 11.6489 21.998 12 21.998C12.3511 21.998 12.696 21.9056 13 21.73L20 17.73C20.3037 17.5547 20.556 17.3025 20.7315 16.9989C20.9071 16.6952 20.9996 16.3508 21 16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M3.27002 6.96002L12 12L20.73 6.96002" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M12 22.08V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>File analysis and data processing</span>
+                            </div>
+                        </div>
+                        
+                        <div class="example-prompts">
+                            <h3>Try these examples:</h3>
+                            <div class="example-grid">
+                                <button class="example-prompt" type="button">
+                                    Explain quantum computing to a 10-year-old
+                                </button>
+                                <button class="example-prompt" type="button">
+                                    Write a JavaScript function to detect palindromes
+                                </button>
+                                <button class="example-prompt" type="button">
+                                    Analyze the strengths and weaknesses of different web frameworks
+                                </button>
+                                <button class="example-prompt" type="button">
+                                    Create an outline for a blog post about AI safety
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Message history will be rendered here -->
+                <!-- No static content so screen readers don't announce empty container -->
+            </div>
+            
+            <div class="input-container">
+                <div class="thinking-mode-toggle" title="Enable extended thinking capabilities">
+                    <label for="thinkingModeToggle">Thinking Mode</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="thinkingModeToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-wrapper">
+                        <textarea id="userInput" placeholder="Message Claude..." rows="1" aria-label="Message input"></textarea>
+                        
+                        <button class="format-button" id="formatButton" aria-label="Format options" aria-haspopup="true" aria-expanded="false">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M4 7V4H20V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="9" y1="20" x2="15" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        
+                        <button class="attach-button" id="attachButton" aria-label="Attach files" aria-haspopup="true">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        
+                        <input type="file" id="fileUpload" class="file-upload" multiple accept="image/*,text/*,.pdf,.json,.csv,.md" aria-label="Upload files">
+                    </div>
+                    
+                    <button class="send-button" id="sendButton" disabled aria-label="Send message">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span class="sr-only">Send</span>
+                    </button>
+                </div>
+                
+                <div class="input-footer">
+                    <div class="usage-info">
+                        <span id="usageInfo">Thinking Budget: <span class="highlight">10,240</span> tokens</span>
+                    </div>
+                    <div class="keyboard-shortcuts">
+                        <button id="keyboardShortcutsBtn" class="text-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 8V8.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 8V8.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M17 8V8.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 12V12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 12V12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M17 12V12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M7 16V16.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M12 16V16.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M17 16V16.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Keyboard shortcuts
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Settings Panel -->
+        <div class="settings-panel" id="settingsPanel" aria-labelledby="settingsHeader" role="dialog" aria-modal="true" aria-hidden="true">
+            <div class="settings-header" id="settingsHeader">
+                <h2>Settings</h2>
+                <button class="close-settings" id="closeSettings" aria-label="Close settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="settings-content">
+                <div class="settings-section">
+                    <h3 id="apiSettingsHeader">API Configuration</h3>
+                    
+                    <div class="form-group">
+                        <label for="apiKey">API Key</label>
+                        <div class="input-with-icon">
+                            <input type="password" id="apiKey" placeholder="Enter your Anthropic API key" aria-labelledby="apiSettingsHeader" autocomplete="off">
+                            <button class="toggle-password" id="togglePassword" aria-label="Toggle password visibility" type="button">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="show-password" aria-hidden="true">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="hide-password" aria-hidden="true">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="form-hint">Your API key is stored locally and never sent to our servers.</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modelSelect">Model</label>
+                        <select id="modelSelect" aria-labelledby="apiSettingsHeader">
+                            <option value="claude-3-7-sonnet-20250219">Claude 3.7 Sonnet (Latest)</option>
+                            <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                            <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
+                            <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+                        </select>
+                        <p class="form-hint">Different models have different capabilities and costs.</p>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 id="modelSettingsHeader">Model Settings</h3>
+                    
+                    <div class="form-group">
+                        <div class="settings-row">
+                            <label for="presetSelector">Configuration Preset</label>
+                            <select id="presetSelector" aria-labelledby="modelSettingsHeader">
+                                <option value="default">Default</option>
+                                <option value="creative">Creative</option>
+                                <option value="precise">Precise</option>
+                                <option value="efficient">Efficient</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="label-with-value">
+                            <label for="temperature">Temperature</label>
+                            <span class="value-display" id="temperatureValue">0.7</span>
+                        </div>
+                        <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7" aria-labelledby="modelSettingsHeader">
+                        <div class="slider-labels">
+                            <span>Precise</span>
+                            <span>Balanced</span>
+                            <span>Creative</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="thinkingBudget">Thinking Budget (tokens)</label>
+                        <input type="number" id="thinkingBudget" min="1024" max="120000" step="1024" value="10240" aria-labelledby="modelSettingsHeader">
+                        <div class="input-hint">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            <span>Higher values enable more in-depth reasoning.</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="maxTokens">Max Output Tokens</label>
+                        <input type="number" id="maxTokens" min="1024" max="4096" step="1024" value="4096" aria-labelledby="modelSettingsHeader">
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 id="interfaceSettingsHeader">Interface Settings</h3>
+                    
+                    <div class="form-group">
+                        <label for="messagesToKeep">Chat History Size</label>
+                        <input type="number" id="messagesToKeep" min="1" max="100" value="20" aria-labelledby="interfaceSettingsHeader">
+                    </div>
+                    
+                    <div class="form-group settings-row">
+                        <label for="themeSelect">Theme</label>
+                        <select id="themeSelect" aria-labelledby="interfaceSettingsHeader">
+                            <option value="system">System Default</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="autoScrollToggle" checked>
+                            <label for="autoScrollToggle">Auto-scroll to new messages</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="soundEffectsToggle">
+                            <label for="soundEffectsToggle">Sound effects</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="codeHighlightingToggle" checked>
+                            <label for="codeHighlightingToggle">Syntax highlighting for code</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 id="dataSettingsHeader">Data Management</h3>
+                    
+                    <div class="button-group">
+                        <button type="button" id="exportSettingsBtn" class="btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Export Settings
+                        </button>
+                        
+                        <button type="button" id="importSettingsBtn" class="btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Import Settings
+                        </button>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button type="button" id="exportChatsBtn" class="btn-secondary">Export All Chats</button>
+                        <button type="button" id="clearDataBtn" class="btn-danger">Clear All Data</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-footer">
+                <button type="button" class="btn-text" id="resetSettingsBtn">Reset to defaults</button>
+                <button type="button" class="btn-primary" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+        
+        <!-- Format menu (popover) -->
+        <div class="format-menu" id="formatMenu" role="menu" hidden>
+            <button class="format-option" data-format="bold" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+                    <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+                </svg>
+                Bold
+                <span class="shortcut">Ctrl+B</span>
+            </button>
+            <button class="format-option" data-format="italic" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="4" x2="10" y2="4"></line>
+                    <line x1="14" y1="20" x2="5" y2="20"></line>
+                    <line x1="15" y1="4" x2="9" y2="20"></line>
+                </svg>
+                Italic
+                <span class="shortcut">Ctrl+I</span>
+            </button>
+            <button class="format-option" data-format="code" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+                Code
+                <span class="shortcut">Ctrl+`</span>
+            </button>
+            <button class="format-option" data-format="codeblock" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Code Block
+                <span class="shortcut">```</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Overlay for modals and panels -->
+    <div class="overlay" id="overlay" aria-hidden="true"></div>
+    
+    <!-- Toast notification container -->
+    <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+    
+    <!-- Live region for screen readers -->
+    <div id="sr-live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    
+    <!-- Template for message actions -->
+    <template id="messageActionsTemplate">
+        <div class="message-actions">
+            <button class="message-action" data-action="copy" aria-label="Copy message">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </button>
+            <button class="message-action" data-action="edit" aria-label="Edit message">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+            </button>
+            <button class="message-action" data-action="regenerate" aria-label="Regenerate response">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                </svg>
+            </button>
+        </div>
+    </template>
+    
+    <!-- Template for context menu -->
+    <template id="contextMenuTemplate">
+        <div class="context-menu" role="menu">
+            <button class="context-menu-item" data-action="copy" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy
+            </button>
+            <button class="context-menu-item" data-action="edit" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit
+            </button>
+            <button class="context-menu-item" data-action="share" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                </svg>
+                Share
+            </button>
+        </div>
+    </template>
+    
+    <!-- PWA Installation Prompt -->
+    <div class="pwa-install-prompt" id="pwaInstallPrompt" hidden aria-hidden="true">
+        <div class="pwa-install-content">
+            <div class="pwa-install-header">
+                <div class="pwa-logo">
+                    <img src="assets/img/icon-192.png" alt="Claude Chat icon" width="48" height="48">
+                </div>
+                <button type="button" class="close-btn" id="pwaDismissX" aria-label="Dismiss">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <h3>Install Claude Chat</h3>
+            <p>Install this app on your device for a better experience with offline capabilities and faster loading.</p>
+            <div class="pwa-features">
+                <div class="pwa-feature">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                        <path d="M2 2l7.586 7.586"></path>
+                        <circle cx="11" cy="11" r="2"></circle>
+                    </svg>
+                    <span>Faster access</span>
+                </div>
+                <div class="pwa-feature">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4"></path>
+                        <path d="M5 19.5C5.5 18 6 15 6 12c0-.7.12-1.37.34-2"></path>
+                        <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"></path>
+                        <path d="M12 10a2 2 0 0 0-2 2"></path>
+                        <path d="M12 10a2 2 0 0 1 2 2"></path>
+                        <path d="M16 7a4 4 0 0 0-8 0"></path>
+                        <path d="M19.14 22.5c-.41.2-.83.4-1.3.5-2.5.6-4.92-.1-7.18-1"></path>
+                    </svg>
+                    <span>Works offline</span>
+                </div>
+                <div class="pwa-feature">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    <span>No browser UI</span>
+                </div>
+            </div>
+            <div class="pwa-buttons">
+                <button type="button" id="pwaInstallButton" class="btn-primary">Install App</button>
+                <button type="button" id="pwaDismissButton" class="btn-text">Not Now</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Keyboard Shortcuts Dialog -->
+    <div class="keyboard-shortcuts-dialog" id="keyboardShortcutsDialog" role="dialog" aria-labelledby="keyboardShortcutsTitle" aria-modal="true" hidden>
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3 id="keyboardShortcutsTitle">Keyboard Shortcuts</h3>
+                <button type="button" class="close-btn" id="closeKeyboardShortcutsBtn" aria-label="Close keyboard shortcuts dialog">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="dialog-body">
+                <div class="shortcuts-group">
+                    <h4>General</h4>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>/</kbd></div>
+                        <div class="shortcut-description">Focus message input</div>
+                    </div>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>Esc</kbd></div>
+                        <div class="shortcut-description">Close dialogs, panels, or menus</div>
+                    </div>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>?</kbd></div>
+                        <div class="shortcut-description">Show keyboard shortcuts</div>
+                    </div>
+                </div>
+                
+                <div class="shortcuts-group">
+                    <h4>Navigation</h4>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>Ctrl</kbd> + <kbd>N</kbd></div>
+                        <div class="shortcut-description">New chat</div>
+                    </div>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>Ctrl</kbd> + <kbd>,</kbd></div>
+                        <div class="shortcut-description">Open settings</div>
+                    </div>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd></div>
+                        <div class="shortcut-description">Toggle theme</div>
+                    </div>
+                </div>
+                
+                <div class="shortcuts-group">
+                    <h4>Editing</h4>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>Enter</kbd></div>
+                        <div class="shortcut-description">Send message</div>
+                    </div>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>Shift</kbd> + <kbd>Enter</kbd></div>
+                        <div class="shortcut-description">Insert new line</div>
+                    </div>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>Ctrl</kbd> + <kbd>B</kbd></div>
+                        <div class="shortcut-description">Bold text</div>
+                    </div>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>Ctrl</kbd> + <kbd>I</kbd></div>
+                        <div class="shortcut-description">Italic text</div>
+                    </div>
+                    <div class="shortcut-row">
+                        <div class="shortcut-key"><kbd>Ctrl</kbd> + <kbd>`</kbd></div>
+                        <div class="shortcut-description">Inline code</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Update notification -->
+    <div class="update-notification" id="updateNotification" role="alert" hidden>
+        <div class="update-content">
+            <div class="update-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                </svg>
+            </div>
+            <div class="update-message">
+                <p>A new version is available</p>
+                <button type="button" class="update-button" id="updateButton">Update Now</button>
+            </div>
+            <button type="button" class="dismiss-update" id="dismissUpdate" aria-label="Dismiss update notification">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- File share target handler (hidden) -->
+    <input type="hidden" id="sharedContent">
+    
+    <!-- Scripts with module support and fallbacks -->
+    <script type="module">
+        // Feature detection
+        document.documentElement.classList.add('js-enabled');
+        if ('loading' in HTMLImageElement.prototype) {
+            document.documentElement.classList.add('loading-attribute-enabled');
+        }
+        
+        // Modern browser detection
+        const isModernBrowser = 'noModule' in HTMLScriptElement.prototype;
+        document.documentElement.classList.toggle('modern-browser', isModernBrowser);
+        
+        // Remove loading class after everything is loaded
+        window.addEventListener('load', () => {
+            // Hide loader
+            const loader = document.getElementById('initialLoader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    document.documentElement.classList.remove('loading');
+                }, 300);
+            } else {
+                document.documentElement.classList.remove('loading');
+            }
+        });
+    </script>
+    
+    <!-- Core scripts -->
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/theme.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/ui.js"></script>
+    <script src="assets/js/settings.js"></script>
+    <script src="assets/js/app.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        // Register service worker after page load
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New content available - show update notification
+                                    const updateNotification = document.getElementById('updateNotification');
+                                    if (updateNotification) {
+                                        updateNotification.removeAttribute('hidden');
+                                        
+                                        const updateButton = document.getElementById('updateButton');
+                                        if (updateButton) {
+                                            updateButton.addEventListener('click', () => {
+                                                // Trigger waiting service worker to become active
+                                                newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                            });
+                                        }
+                                        
+                                        const dismissButton = document.getElementById('dismissUpdate');
+                                        if (dismissButton) {
+                                            dismissButton.addEventListener('click', () => {
+                                                updateNotification.setAttribute('hidden', '');
+                                            });
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+                
+                // Handle controller change (service worker update)
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (!refreshing) {
+                        refreshing = true;
+                        window.location.reload();
+                    }
+                });
+                
+                // Set up Periodic Background Sync if supported
+                if ('periodicSync' in navigator.serviceWorker) {
+                    navigator.serviceWorker.ready.then(async registration => {
+                        try {
+                            // Check permission
+                            const status = await navigator.permissions.query({
+                                name: 'periodic-background-sync',
+                            });
+                            
+                            if (status.state === 'granted') {
+                                // Register sync - update content daily
+                                await registration.periodicSync.register('update-content', {
+                                    minInterval: 24 * 60 * 60 * 1000, // 24 hours
+                                });
+                                console.log('Periodic background sync registered');
+                            }
+                        } catch (error) {
+                            console.log('Periodic background sync not supported:', error);
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Check for shared content (Web Share Target API)
+        if ('serviceWorker' in navigator && window.location.search.includes('share=true')) {
+            // Function to read from IndexedDB
+            const getSharedContent = async () => {
+                try {
+                    // Open the DB and get the shared content
+                    const db = await new Promise((resolve, reject) => {
+                        const request = indexedDB.open('claude-chat-db', 1);
+                        request.onerror = () => reject(request.error);
+                        request.onsuccess = () => resolve(request.result);
+                    });
+                    
+                    // Get the data
+                    const data = await new Promise((resolve, reject) => {
+                        const transaction = db.transaction('shared-content', 'readonly');
+                        const store = transaction.objectStore('shared-content');
+                        const request = store.get('latest-share');
+                        request.onerror = () => reject(request.error);
+                        request.onsuccess = () => resolve(request.result);
+                    });
+                    
+                    if (data) {
+                        // Store the shared content for the app to pick up
+                        document.getElementById('sharedContent').value = JSON.stringify(data);
+                        // Dispatch custom event for the app to catch
+                        window.dispatchEvent(new CustomEvent('shared-content-ready', { detail: data }));
+                    }
+                } catch (error) {
+                    console.error('Error reading shared content:', error);
+                }
+            };
+            
+            // Wait for the app to be ready, then get the shared content
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', getSharedContent);
+            } else {
+                getSharedContent();
+            }
+        }
+    </script>
+</body>
+</html>

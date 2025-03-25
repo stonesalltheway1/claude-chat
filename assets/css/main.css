@@ -1,0 +1,242 @@
+:root {
+    /* Color palette */
+    --primary-color: #7e57c2;
+    --primary-light: #b085f5;
+    --primary-dark: #4d2c91;
+    --secondary-color: #4fc3f7;
+    --secondary-light: #8bf6ff;
+    --secondary-dark: #0093c4;
+    --accent-color: #ffab40;
+    
+    /* Text colors */
+    --text-color: #333333;
+    --text-secondary: #666666;
+    --text-tertiary: #888888;
+    --light-text: #ffffff;
+    
+    /* Background colors */
+    --background-color: #f5f7fa;
+    --card-color: #ffffff;
+    --sidebar-color: #ffffff;
+    --sidebar-active: #f0e6ff;
+    
+    /* UI colors */
+    --border-color: #e0e0e0;
+    --divider-color: #eeeeee;
+    --error-color: #f44336;
+    --warning-color: #ff9800;
+    --success-color: #4caf50;
+    --info-color: #2196f3;
+    
+    /* Message colors */
+    --human-message-bg: #f0f7ff;
+    --human-message-border: #d0e3ff;
+    --assistant-message-bg: #f9f4ff;
+    --assistant-message-border: #e4d8ff;
+    --system-message-bg: #f5f5f5;
+    --system-message-border: #e0e0e0;
+    
+    /* Code colors */
+    --code-background: #282c34;
+    --inline-code-bg: #f1f1f1;
+    --inline-code-color: #e01e5a;
+    
+    /* Interactive colors */
+    --hover-color: #f0f0f0;
+    --active-color: #e6e6e6;
+    --focus-ring: rgba(126, 87, 194, 0.4);
+    
+    /* Sizing & Spacing */
+    --border-radius-sm: 4px;
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
+    --header-height: 60px;
+    --sidebar-width: 280px;
+    --input-height: 60px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    
+    /* Animation */
+    --transition-fast: 0.15s ease;
+    --transition: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    
+    /* Font settings */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --font-monospace: 'Fira Code', 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size: 1rem;
+    --font-size-md: 1.125rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.5rem;
+    --font-size-2xl: 1.875rem;
+    --font-size-3xl: 2.25rem;
+    
+    /* Z-index layers */
+    --z-sidebar: 100;
+    --z-header: 90;
+    --z-overlay: 200;
+    --z-modal: 300;
+    --z-toast: 400;
+    --z-tooltip: 500;
+}
+
+/* Dark Mode Colors */
+.dark-theme {
+    --primary-color: #9575cd;
+    --primary-light: #c7a4ff;
+    --primary-dark: #65499c;
+    --secondary-color: #4fc3f7;
+    
+    --text-color: #e0e0e0;
+    --text-secondary: #bbbbbb;
+    --text-tertiary: #999999;
+    --light-text: #ffffff;
+    
+    --background-color: #121212;
+    --card-color: #1e1e1e;
+    --sidebar-color: #1a1a1a;
+    --sidebar-active: #2d2545;
+    
+    --border-color: #333333;
+    --divider-color: #2a2a2a;
+    
+    --human-message-bg: #253545;
+    --human-message-border: #364859;
+    --assistant-message-bg: #2a2536;
+    --assistant-message-border: #3a344c;
+    --system-message-bg: #282828;
+    --system-message-border: #383838;
+    
+    --code-background: #1a1a1a;
+    --inline-code-bg: #2a2a2a;
+    --inline-code-color: #ff8fa3;
+    
+    --hover-color: #2a2a2a;
+    --active-color: #333333;
+}
+
+/* Base styles */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    position: relative;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+button, input, textarea, select {
+    font: inherit;
+    color: inherit;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.5);
+    border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(155, 155, 155, 0.7);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 0.5em;
+    color: var(--text-color);
+}
+
+h1 {
+    font-size: var(--font-size-xl);
+}
+
+h2 {
+    font-size: var(--font-size-lg);
+}
+
+h3 {
+    font-size: var(--font-size-md);
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+code {
+    font-family: var(--font-monospace);
+    font-size: 0.9em;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    :root {
+        --sidebar-width: 100%;
+    }
+    
+    .app-container {
+        flex-direction: column;
+    }
+    
+    h1 {
+        font-size: var(--font-size-lg);
+    }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

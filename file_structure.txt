@@ -1,0 +1,27 @@
+Folder PATH listing
+Volume serial number is F8AA-523B
+C:.
+¦   file_structure.txt
+¦   index.html
+¦   manifest.json
+¦   service-worker.js
+¦   
++---assets
+    +---css
+    ¦       chat.css
+    ¦       components.css
+    ¦       main.css
+    ¦       settings.css
+    ¦       utils.css
+    ¦       
+    +---img
+    ¦       favicon.html
+    ¦       
+    +---js
+            api.js
+            app.js
+            settings.js
+            theme.js
+            ui.js
+            utils.js
+            
